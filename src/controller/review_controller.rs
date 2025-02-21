@@ -1,55 +1,72 @@
 use crate::models::review::Review;
+use std::fmt::{Debug, Display, Formatter};
 
-pub fn review() -> String {
-    let review = Review::new(
+use actix_web::body::BoxBody;
+use actix_web::{
+    error::ResponseError,
+    get,
+    http::{header::ContentType, StatusCode},
+    post,
+    web::Data,
+    web::Json,
+    web::Path,
+    HttpResponse,
+};
+use derive_more::Display;
+use serde::Deserialize;
+
+#[derive(Deserialize)]
+pub struct SubmitReviewRequest {
+    product_id: String,
+    added_by: String,
+    rating: u8,
+}
+
+#[derive(Debug)]
+pub enum ReviewError {
+    ReviewNotFound,
+    FailedToCreate,
+    BadReview
+}
+
+impl Display for ReviewError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl ResponseError for ReviewError {
+    fn status_code(&self) -> StatusCode {
+        match self {
+            ReviewError::ReviewNotFound => StatusCode::NOT_FOUND,
+            ReviewError::FailedToCreate => StatusCode::INTERNAL_SERVER_ERROR,
+            ReviewError::BadReview => StatusCode::BAD_REQUEST,
+        }
+    }
+
+    fn error_response(&self) -> HttpResponse {
+        HttpResponse::build(self.status_code())
+            .insert_header(ContentType::json())
+            .body(self.to_string())
+    }
+}
+
+#[get("/review")]
+pub async fn review() -> Result<Json<Review>, ReviewError> {
+    Ok(Json(Review::new(
         "Product123".to_string(),
         "JohnDoe".to_string(),
         "2025-02-20".to_string(),
         5,
-    );
-
-    format!(
-        "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{}",
-        serde_json::to_string(&review).unwrap()
-    )
+    )))
 }
 
-
-//TODO fixed trailing characters, maybe refactor to have a standard body instead of a string buffer
-
-pub fn add_review(review_json: String) -> String {
-    // Log the raw review JSON to see if there are extra characters
-    println!("Received review JSON: {:?}", review_json);
-
-    // Try trimming the review to remove any leading/trailing whitespace or unwanted characters
-    let review_json = review_json.trim().to_string();
-
-    // Log the trimmed JSON for debugging purposes
-    println!("Trimmed review JSON: {:?}", review_json);
-
-    // Attempt to deserialize the review JSON string
-    let review: Result<Review, _> = serde_json::from_str(&review_json);
-
-    match review {
-        Ok(review) => {
-            // Serialize the review back into JSON and send a successful response
-            let response_json = serde_json::to_string(&review).unwrap();
-            println!("Saved new review: {}", response_json);
-
-            format!(
-                "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{}",
-                response_json
-            )
-        }
-        Err(e) => {
-            // Log the error for debugging
-            eprintln!("Failed to parse review: {:?}", e);
-
-            format!(
-                "HTTP/1.1 400 BAD REQUEST\r\nContent-Type: text/plain\r\n\r\nFailed to parse review: {:?}",
-                e
-            )
-        }
-    }
+#[post("/add_review")]
+pub async fn add_review(review_request: Json<SubmitReviewRequest>, ) -> Result<Json<Review>, ReviewError> {
+    Ok(Json(Review::new(
+        review_request.product_id.to_string(),
+        review_request.added_by.to_string(),
+        "2025-02-20".to_string(),
+        review_request.rating,
+    )))
 }
-

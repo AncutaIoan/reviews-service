@@ -1,11 +1,8 @@
-POST  http://localhost:8080/review
+POST  http://localhost:8080/add_review
 Content-Type: application/json
 
-{
-  "product_id": "12345",
-  "added_by": "JohnDoe",
-  "added_at": "2025-02-21T12:00:00",
-  "rating": 5
-}
+{"product_id": "12345", "added_by": "JohnDoe", "rating": 5}
+
+
 ###
 GET http://localhost:8080/review

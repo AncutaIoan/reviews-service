@@ -12,5 +12,7 @@ log = "^0.4"
 strum_macros = "^0.24"
 strum = { version = "^0.24", features = ["derive"] }
 derive_more = "^0.9"
+sqlx = { version = "0.7", features = ["postgres", "runtime-tokio", "tls-rustls"] }
+dotenv = "0.15"
 
 

@@ -51,8 +51,8 @@ impl ResponseError for ReviewError {
     }
 }
 
-#[get("/review")]
-pub async fn review() -> Result<Json<Review>, ReviewError> {
+#[get("/review/{review_id}")]
+pub async fn review(review_id: Path<String>) -> Result<Json<Review>, ReviewError> {
     Ok(Json(Review::new(
         "Product123".to_string(),
         "JohnDoe".to_string(),

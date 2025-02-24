@@ -5,4 +5,4 @@ Content-Type: application/json
 
 
 ###
-GET http://localhost:8080/review
+GET http://localhost:8080/review/1

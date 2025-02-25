@@ -2,13 +2,16 @@ use crate::models::review::{EntityType, Review};
 use std::fmt::{Debug, Display, Formatter};
 
 use actix_web::{error::ResponseError, get, http::{header::ContentType, StatusCode}, post, web::Json, web::Path, HttpResponse};
+use actix_web::web::Data;
 use serde::Deserialize;
+use sqlx::{Error, PgPool};
+use crate::controller::review_controller::ReviewError::{FailedToCreate, ReviewNotFound};
 
 #[derive(Deserialize)]
 pub struct SubmitReviewRequest {
     product_id: String,
     added_by: String,
-    rating: u8,
+    rating: i32,
 }
 
 #[derive(Debug)]
@@ -40,24 +43,72 @@ impl ResponseError for ReviewError {
     }
 }
 
+
 #[get("/review/{review_id}")]
-pub async fn review(review_id: Path<u8>) -> Result<Json<Review>, ReviewError> {
-    Ok(Json(Review::new(
-        "JohnDoe".to_string(),
-        "2025-02-20".to_string(),
-        5,
-        EntityType::Company,
-        "123".to_string()
-    )))
+pub async fn get_review(pool: Data<PgPool>, review_id: Path<i32>, ) -> Result<Json<Review>, ReviewError> {
+    match find_review_by_id(&pool, *review_id).await {
+        Ok(review) => Ok(Json(review)),
+        Err(_) => Err(ReviewNotFound),
+    }
 }
 
 #[post("/add_review")]
-pub async fn add_review(review_request: Json<SubmitReviewRequest>, ) -> Result<Json<Review>, ReviewError> {
-    Ok(Json(Review::new(
+pub async fn add_review(pool: Data<PgPool>, review_request: Json<SubmitReviewRequest>, ) -> Result<Json<Review>, ReviewError> {
+    let new_review = Review::new(
         review_request.added_by.to_string(),
         "2025-02-20".to_string(),
         review_request.rating,
         EntityType::Person,
         "124".to_string()
-    )))
+    );
+
+    match create_review(&pool, &new_review).await {
+        Ok(inserted_review) => Ok(Json(inserted_review)),
+        Err(e) => Err(FailedToCreate), // Handle the error (you can customize this as needed)
+    }
+}
+
+async fn create_review(pool: &PgPool, review: &Review) -> Result<Review, Error> {
+    let query = r#"
+        INSERT INTO reviews (added_by, added_at, rating, entity_type, entity_id)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id, added_by, added_at, rating, entity_type, entity_id
+    "#;
+
+    match sqlx::query_as::<_, Review>(query)
+        .bind(&review.added_by)
+        .bind(&review.added_at)
+        .bind(review.rating)
+        .bind(&review.entity_type)
+        .bind(&review.entity_id)
+        .fetch_one(pool)
+        .await
+    {
+        Ok(result) => Ok(result),
+        Err(e) => {
+            eprintln!("Error inserting review: {}", e);
+            Err(e)
+        }
+    }
+
+}
+
+
+async fn find_review_by_id(pool: &PgPool, id: i32) -> Result<Review, Error> {
+    let query = r#"
+        SELECT id, added_by, added_at, rating, entity_type, entity_id
+        FROM reviews
+        WHERE id = $1
+    "#;
+
+    match sqlx::query_as::<_, Review>(query)
+        .bind(&id)
+        .fetch_one(pool)
+        .await {
+        Ok(result) => Ok(result),
+        Err(e) => {
+            eprintln!("Error retrieving review: {}", e);
+            Err(e)
+        }
+    }
 }

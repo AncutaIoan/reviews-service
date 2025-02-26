@@ -5,7 +5,7 @@ use actix_web::{error::ResponseError, get, http::{header::ContentType, StatusCod
 use actix_web::web::Data;
 use serde::Deserialize;
 use sqlx::{Error, PgPool};
-use crate::controller::review_controller::ReviewError::{FailedToCreate, ReviewNotFound};
+use crate::controller::review_controller::ReviewError::{FailedToCreate, FailedToRetrieve, ReviewNotFound};
 
 #[derive(Deserialize)]
 pub struct SubmitReviewRequest {
@@ -18,7 +18,8 @@ pub struct SubmitReviewRequest {
 pub enum ReviewError {
     ReviewNotFound,
     FailedToCreate,
-    BadReview
+    BadReview,
+    FailedToRetrieve
 }
 
 impl Display for ReviewError {
@@ -33,6 +34,7 @@ impl ResponseError for ReviewError {
             ReviewError::ReviewNotFound => StatusCode::NOT_FOUND,
             ReviewError::FailedToCreate => StatusCode::INTERNAL_SERVER_ERROR,
             ReviewError::BadReview => StatusCode::BAD_REQUEST,
+            ReviewError::FailedToRetrieve => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 
@@ -43,16 +45,7 @@ impl ResponseError for ReviewError {
     }
 }
 
-
-#[get("/review/{review_id}")]
-pub async fn get_review(pool: Data<PgPool>, review_id: Path<i32>, ) -> Result<Json<Review>, ReviewError> {
-    match find_review_by_id(&pool, *review_id).await {
-        Ok(review) => Ok(Json(review)),
-        Err(_) => Err(ReviewNotFound),
-    }
-}
-
-#[post("/add_review")]
+#[post("/review/add")]
 pub async fn add_review(pool: Data<PgPool>, review_request: Json<SubmitReviewRequest>, ) -> Result<Json<Review>, ReviewError> {
     let new_review = Review::new(
         review_request.added_by.to_string(),
@@ -64,7 +57,23 @@ pub async fn add_review(pool: Data<PgPool>, review_request: Json<SubmitReviewReq
 
     match create_review(&pool, &new_review).await {
         Ok(inserted_review) => Ok(Json(inserted_review)),
-        Err(e) => Err(FailedToCreate), // Handle the error (you can customize this as needed)
+        Err(_) => Err(FailedToCreate)
+    }
+}
+
+#[get("/review/find_by_id/{review_id}")]
+pub async fn get_review(pool: Data<PgPool>, review_id: Path<i32>, ) -> Result<Json<Review>, ReviewError> {
+    match find_review_by_id(&pool, *review_id).await {
+        Ok(review) => Ok(Json(review)),
+        Err(_) => Err(ReviewNotFound)
+    }
+}
+
+#[get("/review/get_all_reviews")]
+pub async fn get_all_reviews(pool: Data<PgPool>) -> Result<Json<Vec<Review>>, ReviewError> {
+    match find_all_reviews(&pool).await {
+        Ok(reviews) => Ok(Json(reviews)),
+        Err(_) => Err(FailedToRetrieve)
     }
 }
 
@@ -108,6 +117,23 @@ async fn find_review_by_id(pool: &PgPool, id: i32) -> Result<Review, Error> {
         Ok(result) => Ok(result),
         Err(e) => {
             eprintln!("Error retrieving review: {}", e);
+            Err(e)
+        }
+    }
+}
+
+async fn find_all_reviews(pool: &PgPool) -> Result<Vec<Review>, Error> {
+    let query = r#"
+        SELECT id, added_by, added_at, rating, entity_type, entity_id
+        FROM reviews
+    "#;
+
+    match sqlx::query_as::<_, Review>(query)
+        .fetch_all(pool)
+        .await {
+        Ok(result) => Ok(result),
+        Err(e) => {
+            eprintln!("Error retrieving reviews: {}", e);
             Err(e)
         }
     }

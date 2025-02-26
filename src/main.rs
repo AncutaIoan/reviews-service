@@ -30,8 +30,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .wrap(logger)
-            .service(controller::review_controller::get_review)
             .service(controller::review_controller::add_review)
+            .service(controller::review_controller::get_review)
+            .service(controller::review_controller::get_all_reviews)
     })
 
     .bind("127.0.0.1:8080")?

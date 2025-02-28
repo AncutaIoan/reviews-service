@@ -1,7 +1,7 @@
 use crate::models::review::{EntityType, Review};
 use std::fmt::{Debug, Display, Formatter};
-
-use actix_web::{error::ResponseError, get, http::{header::ContentType, StatusCode}, post, web::Json, web::Path, HttpResponse};
+use chrono::{DateTime};
+use actix_web::{delete, error::ResponseError, get, http::{header::ContentType, StatusCode}, post, web::Json, web::Path, HttpResponse};
 use actix_web::web::Data;
 use serde::Deserialize;
 use sqlx::{Error, PgPool};
@@ -62,9 +62,17 @@ pub async fn add_review(pool: Data<PgPool>, review_request: Json<SubmitReviewReq
 }
 
 #[get("/review/find_by_id/{review_id}")]
-pub async fn get_review(pool: Data<PgPool>, review_id: Path<i32>, ) -> Result<Json<Review>, ReviewError> {
+pub async fn get_review(pool: Data<PgPool>, review_id: Path<i32>) -> Result<Json<Review>, ReviewError> {
     match find_review_by_id(&pool, *review_id).await {
         Ok(review) => Ok(Json(review)),
+        Err(_) => Err(ReviewNotFound)
+    }
+}
+
+#[delete("/review/delete/{review_id}")]
+pub async fn delete_review(pool: Data<PgPool>, review_id: Path<i32>) -> Result<Json<u64>, ReviewError> {
+    match delete_review_by_id(&pool, *review_id).await {
+        Ok(number_of_affected_rows) => Ok(Json(number_of_affected_rows)),
         Err(_) => Err(ReviewNotFound)
     }
 }
@@ -117,6 +125,24 @@ async fn find_review_by_id(pool: &PgPool, id: i32) -> Result<Review, Error> {
         Ok(result) => Ok(result),
         Err(e) => {
             eprintln!("Error retrieving review: {}", e);
+            Err(e)
+        }
+    }
+}
+
+async fn delete_review_by_id(pool: &PgPool, id: i32) -> Result<u64, Error> {
+    let query = r#"
+        DELETE FROM reviews
+        WHERE id = $1
+    "#;
+
+    match sqlx::query(query)
+        .bind(id)
+        .execute(pool)
+        .await {
+        Ok(result) => Ok(result.rows_affected()), // Return number of affected rows
+        Err(e) => {
+            eprintln!("Error deleting review: {}", e);
             Err(e)
         }
     }

@@ -9,3 +9,7 @@ GET http://localhost:8080/review/find_by_id/3
 
 ###
 GET http://localhost:8080/review/get_all_reviews
+
+
+###
+DELETE http://localhost:8080/review/delete/3

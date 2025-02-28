@@ -3,5 +3,8 @@ struct User{
     name: String,
     username: String,
     email: String,
-    password: String
+    password: String,
+    phone_number: String,
+    created_at: String,
+    updated_at: String
 }

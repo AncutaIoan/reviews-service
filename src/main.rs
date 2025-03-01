@@ -1,16 +1,13 @@
-use actix_web::{middleware::Logger, web, App, HttpServer};
+use crate::repository::app_state::AppState;
+use crate::repository::review_repository::ReviewRepository;
+use actix_web::web::Data;
+use actix_web::{middleware::Logger, App, HttpServer};
 use dotenv::dotenv;
 use sqlx::{ConnectOptions, PgPool};
-mod controller;
-mod db;
-mod models;
 
-#[derive(Debug, sqlx::FromRow)]
-struct User {
-    id: i32,
-    name: String,
-    age: i32,
-}
+mod controller;
+mod models;
+mod repository;
 
 #[actix_web::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -22,20 +19,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Database URL: {}", database_url);
 
     let pool = PgPool::connect(&database_url).await?;
+    let app_state = Data::new(AppState::new(pool));
 
     env_logger::init();
 
     HttpServer::new(move || {
         let logger = Logger::default();
         App::new()
-            .app_data(web::Data::new(pool.clone()))
+            .app_data(app_state.clone())
             .wrap(logger)
             .service(controller::review_controller::add_review)
             .service(controller::review_controller::get_review)
             .service(controller::review_controller::get_all_reviews)
             .service(controller::review_controller::delete_review)
     })
-
     .bind("127.0.0.1:8080")?
         .run()
         .await?;

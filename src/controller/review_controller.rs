@@ -1,11 +1,11 @@
-use crate::models::review::{EntityType, Review};
-use std::fmt::{Debug, Display, Formatter};
-use chrono::{DateTime};
-use actix_web::{delete, error::ResponseError, get, http::{header::ContentType, StatusCode}, post, web::Json, web::Path, HttpResponse};
-use actix_web::web::Data;
-use serde::Deserialize;
-use sqlx::{Error, PgPool};
 use crate::controller::review_controller::ReviewError::{FailedToCreate, FailedToRetrieve, ReviewNotFound};
+use crate::models::review::{EntityType, Review};
+use crate::repository::app_state::AppState;
+use crate::repository::review_repository::ReviewRepository;
+use actix_web::web::Data;
+use actix_web::{delete, error::ResponseError, get, http::{header::ContentType, StatusCode}, post, web::Json, web::Path, HttpResponse};
+use serde::Deserialize;
+use std::fmt::{Debug, Display, Formatter};
 
 #[derive(Deserialize)]
 pub struct SubmitReviewRequest {
@@ -46,7 +46,7 @@ impl ResponseError for ReviewError {
 }
 
 #[post("/review/add")]
-pub async fn add_review(pool: Data<PgPool>, review_request: Json<SubmitReviewRequest>, ) -> Result<Json<Review>, ReviewError> {
+pub async fn add_review(repo: Data<AppState>, review_request: Json<SubmitReviewRequest>, ) -> Result<Json<Review>, ReviewError> {
     let new_review = Review::new(
         review_request.added_by.to_string(),
         "2025-02-20".to_string(),
@@ -55,112 +55,32 @@ pub async fn add_review(pool: Data<PgPool>, review_request: Json<SubmitReviewReq
         "124".to_string()
     );
 
-    match create_review(&pool, &new_review).await {
+    match repo.review_repo.create_review(&new_review).await {
         Ok(inserted_review) => Ok(Json(inserted_review)),
         Err(_) => Err(FailedToCreate)
     }
 }
 
 #[get("/review/find_by_id/{review_id}")]
-pub async fn get_review(pool: Data<PgPool>, review_id: Path<i32>) -> Result<Json<Review>, ReviewError> {
-    match find_review_by_id(&pool, *review_id).await {
+pub async fn get_review(repo: Data<AppState>, review_id: Path<i32>) -> Result<Json<Review>, ReviewError> {
+    match repo.review_repo.find_review_by_id(*review_id).await {
         Ok(review) => Ok(Json(review)),
         Err(_) => Err(ReviewNotFound)
     }
 }
 
 #[delete("/review/delete/{review_id}")]
-pub async fn delete_review(pool: Data<PgPool>, review_id: Path<i32>) -> Result<Json<u64>, ReviewError> {
-    match delete_review_by_id(&pool, *review_id).await {
+pub async fn delete_review(repo: Data<AppState>, review_id: Path<i32>) -> Result<Json<u64>, ReviewError> {
+    match repo.review_repo.delete_review_by_id(*review_id).await {
         Ok(number_of_affected_rows) => Ok(Json(number_of_affected_rows)),
         Err(_) => Err(ReviewNotFound)
     }
 }
 
 #[get("/review/get_all_reviews")]
-pub async fn get_all_reviews(pool: Data<PgPool>) -> Result<Json<Vec<Review>>, ReviewError> {
-    match find_all_reviews(&pool).await {
+pub async fn get_all_reviews(repo: Data<AppState>) -> Result<Json<Vec<Review>>, ReviewError> {
+    match repo.review_repo.find_all_reviews().await {
         Ok(reviews) => Ok(Json(reviews)),
         Err(_) => Err(FailedToRetrieve)
-    }
-}
-
-async fn create_review(pool: &PgPool, review: &Review) -> Result<Review, Error> {
-    let query = r#"
-        INSERT INTO reviews (added_by, added_at, rating, entity_type, entity_id)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING id, added_by, added_at, rating, entity_type, entity_id
-    "#;
-
-    match sqlx::query_as::<_, Review>(query)
-        .bind(&review.added_by)
-        .bind(&review.added_at)
-        .bind(review.rating)
-        .bind(&review.entity_type)
-        .bind(&review.entity_id)
-        .fetch_one(pool)
-        .await
-    {
-        Ok(result) => Ok(result),
-        Err(e) => {
-            eprintln!("Error inserting review: {}", e);
-            Err(e)
-        }
-    }
-
-}
-
-
-async fn find_review_by_id(pool: &PgPool, id: i32) -> Result<Review, Error> {
-    let query = r#"
-        SELECT id, added_by, added_at, rating, entity_type, entity_id
-        FROM reviews
-        WHERE id = $1
-    "#;
-
-    match sqlx::query_as::<_, Review>(query)
-        .bind(&id)
-        .fetch_one(pool)
-        .await {
-        Ok(result) => Ok(result),
-        Err(e) => {
-            eprintln!("Error retrieving review: {}", e);
-            Err(e)
-        }
-    }
-}
-
-async fn delete_review_by_id(pool: &PgPool, id: i32) -> Result<u64, Error> {
-    let query = r#"
-        DELETE FROM reviews
-        WHERE id = $1
-    "#;
-
-    match sqlx::query(query)
-        .bind(id)
-        .execute(pool)
-        .await {
-        Ok(result) => Ok(result.rows_affected()), // Return number of affected rows
-        Err(e) => {
-            eprintln!("Error deleting review: {}", e);
-            Err(e)
-        }
-    }
-}
-
-async fn find_all_reviews(pool: &PgPool) -> Result<Vec<Review>, Error> {
-    let query = r#"
-        SELECT id, added_by, added_at, rating, entity_type, entity_id
-        FROM reviews
-    "#;
-
-    match sqlx::query_as::<_, Review>(query)
-        .fetch_all(pool)
-        .await {
-        Ok(result) => Ok(result),
-        Err(e) => {
-            eprintln!("Error retrieving reviews: {}", e);
-            Err(e)
-        }
     }
 }

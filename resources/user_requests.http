@@ -1,0 +1,13 @@
+POST  http://localhost:8080/user/add
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "username": "johndoe123",
+  "email": "johndoe@example.com",
+  "password": "securepassword123",
+  "phone_number": "+1234567890"
+}
+
+###
+GET http://localhost:8080/user/find_by_id/1

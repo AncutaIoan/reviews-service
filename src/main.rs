@@ -31,6 +31,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             .service(controller::review_controller::get_review)
             .service(controller::review_controller::get_all_reviews)
             .service(controller::review_controller::delete_review)
+            .service(controller::user_controller::add_user)
+            .service(controller::user_controller::get_user_by_id)
     })
     .bind("127.0.0.1:8080")?
         .run()

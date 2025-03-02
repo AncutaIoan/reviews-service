@@ -10,7 +10,7 @@ use std::fmt::{Debug, Display, Formatter};
 pub struct SubmitReviewRequest {
     product_id: String,
     added_by: String,
-    rating: i32,
+    rating: i32
 }
 
 #[derive(Debug)]
@@ -45,7 +45,7 @@ impl ResponseError for ReviewError {
 }
 
 #[post("/review/add")]
-pub async fn add_review(repo: Data<AppState>, review_request: Json<SubmitReviewRequest>, ) -> Result<Json<Review>, ReviewError> {
+pub async fn add_review(repo: Data<AppState>, review_request: Json<SubmitReviewRequest>) -> Result<Json<Review>, ReviewError> {
     let new_review = Review::new(
         review_request.added_by.to_string(),
         "2025-02-20".to_string(),

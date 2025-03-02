@@ -1,9 +1,8 @@
 use crate::repository::app_state::AppState;
-use crate::repository::review_repository::ReviewRepository;
 use actix_web::web::Data;
 use actix_web::{middleware::Logger, App, HttpServer};
 use dotenv::dotenv;
-use sqlx::{ConnectOptions, PgPool};
+use sqlx::{PgPool};
 
 mod controller;
 mod models;

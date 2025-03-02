@@ -1,7 +1,6 @@
 use crate::controller::review_controller::ReviewError::{FailedToCreate, FailedToRetrieve, ReviewNotFound};
 use crate::models::review::{EntityType, Review};
 use crate::repository::app_state::AppState;
-use crate::repository::review_repository::ReviewRepository;
 use actix_web::web::Data;
 use actix_web::{delete, error::ResponseError, get, http::{header::ContentType, StatusCode}, post, web::Json, web::Path, HttpResponse};
 use serde::Deserialize;

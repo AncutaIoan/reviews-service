@@ -10,6 +10,7 @@ impl PostgresRepository {
         Self { pool }
     }
 }
+
 #[async_trait::async_trait]
 pub trait ReviewRepository: Send + Sync {
     async fn create_review(&self, review: &Review) -> Result<Review, Error>;
@@ -100,5 +101,4 @@ impl ReviewRepository for PostgresRepository {
             }
         }
     }
-
 }

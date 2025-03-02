@@ -1,5 +1,6 @@
 use sqlx::{Error, PgPool};
 use crate::models::review::Review;
+use crate::models::user::User;
 
 pub struct PostgresRepository {
     pool: PgPool,
@@ -17,6 +18,12 @@ pub trait ReviewRepository: Send + Sync {
     async fn find_review_by_id(&self, id: i32) -> Result<Review, Error>;
     async fn delete_review_by_id(&self, id: i32) -> Result<u64, Error>;
     async fn find_all_reviews(&self) -> Result<Vec<Review>, Error>;
+}
+
+#[async_trait::async_trait]
+pub trait UserRepository: Send + Sync {
+    async fn create_user(&self, user: &User) -> Result<User, Error>;
+    async fn find_by_id(&self, id: i32) -> Result<User, Error>;
 }
 
 

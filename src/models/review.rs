@@ -41,7 +41,7 @@ impl EntityType {
 }
 
 impl Review {
-    pub(crate) fn new(added_by: String, added_at: String, rating: i32, entity_type: EntityType, entity_id: String, ) -> Self {
+    pub(crate) fn new(added_by: String, added_at: String, rating: i32, entity_type: EntityType, entity_id: String) -> Self {
         Review {
             id: 0,
             added_by,

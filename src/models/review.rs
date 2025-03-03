@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use chrono::{NaiveDateTime, Utc};
 
 use sqlx::FromRow;
 
@@ -6,9 +7,9 @@ use sqlx::FromRow;
 pub(crate) struct Review {
     id: i32,
     pub(crate) added_by: String,
-    pub(crate) added_at: String,
+    pub(crate) added_at: NaiveDateTime,
     pub(crate) rating: i32,
-    pub(crate) entity_type: String,  // Store entity_type as a string
+    pub(crate) entity_type: String,
     pub(crate) entity_id: String,
 }
 
@@ -41,7 +42,9 @@ impl EntityType {
 }
 
 impl Review {
-    pub(crate) fn new(added_by: String, added_at: String, rating: i32, entity_type: EntityType, entity_id: String) -> Self {
+    pub(crate) fn new(added_by: String, rating: i32, entity_type: EntityType, entity_id: String) -> Self {
+        let added_at = Utc::now().naive_utc();
+
         Review {
             id: 0,
             added_by,
@@ -54,7 +57,6 @@ impl Review {
     fn validate(&self) -> bool {
         if self.entity_id.is_empty()
             || self.added_by.is_empty()
-            || self.added_at.is_empty()
             || self.rating > 5
         {
             return false;

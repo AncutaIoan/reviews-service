@@ -52,9 +52,7 @@ pub async fn add_user(repo: Data<AppState>, create_user_request: Json<CreateUser
         create_user_request.username.to_string(),
         create_user_request.email.to_string(),
         create_user_request.password.to_string(),
-        create_user_request.phone_number.to_string(),
-        "2025-02-20".to_string(),
-        "2025-02-20".to_string()
+        create_user_request.phone_number.to_string()
     );
 
     match repo.user_repo.create_user(&new_user).await {

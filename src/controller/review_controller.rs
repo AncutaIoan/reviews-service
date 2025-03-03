@@ -48,7 +48,6 @@ impl ResponseError for ReviewError {
 pub async fn add_review(repo: Data<AppState>, review_request: Json<SubmitReviewRequest>) -> Result<Json<Review>, ReviewError> {
     let new_review = Review::new(
         review_request.added_by.to_string(),
-        "2025-02-20".to_string(),
         review_request.rating,
         EntityType::Person,
         "124".to_string()

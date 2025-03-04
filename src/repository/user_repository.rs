@@ -6,6 +6,7 @@ use crate::repository::repository::PostgresRepository;
 pub trait UserRepository: Send + Sync {
     async fn create_user(&self, user: &User) -> Result<User, Error>;
     async fn find_by_id(&self, id: i32) -> Result<User, Error>;
+    async fn find_by_email(&self, email: String) -> Result<User, Error>;
 }
 
 
@@ -46,6 +47,24 @@ impl UserRepository for PostgresRepository {
 
         match sqlx::query_as::<_, User>(query)
             .bind(&id).fetch_one(&self.pool)
+            .await {
+            Ok(result) => Ok(result),
+            Err(e) => {
+                eprintln!("Error retrieving user: {}", e);
+                Err(e)
+            }
+        }
+    }
+
+    async fn find_by_email(&self, email: String) -> Result<User, Error> {
+        let query = r#"
+                            SELECT *
+                            FROM users
+                            WHERE email = $1
+                          "#;
+
+        match sqlx::query_as::<_, User>(query)
+            .bind(&email).fetch_one(&self.pool)
             .await {
             Ok(result) => Ok(result),
             Err(e) => {

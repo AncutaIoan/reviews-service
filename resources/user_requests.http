@@ -1,13 +1,29 @@
-POST  http://localhost:8080/user/add
+POST  http://localhost:8080/user/register
 Content-Type: application/json
 
 {
-  "name": "John Doe",
-  "username": "johndoe123",
-  "email": "johndoe@example.com",
+  "name": "John Doe2",
+  "username": "johndoe2",
+  "email": "johndo2e@example.com",
   "password": "securepassword123",
-  "phone_number": "+1234567890"
+  "password_confirmation": "securepassword123",
+  "phone_number": "+1234567892"
 }
+
+###
+POST http://localhost:8080/user/login
+Content-Type: application/json
+
+{
+           "email": "johndo2e@example.com",
+           "password": "securepassword123"
+}
+
+###
+GET http://localhost:8080/user/me
+Content-Type: application/json
+Cookie: auth_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI5IiwiZXhwIjoxNzQxMTIzODEwfQ.R_v21i9mcMPZEQnzeVRecn63ETXAO_XxeliY3N_5Xes
+
 
 ###
 GET http://localhost:8080/user/find_by_id/1

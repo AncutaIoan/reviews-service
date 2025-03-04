@@ -4,7 +4,7 @@ use sqlx::FromRow;
 
 #[derive(Serialize, Deserialize, FromRow)]
 pub(crate) struct User{
-    id: i32,
+    pub(crate) id: i32,
     pub(crate) name: String,
     pub(crate) username: String,
     pub(crate) email: String,

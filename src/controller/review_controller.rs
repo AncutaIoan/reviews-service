@@ -50,7 +50,7 @@ pub async fn add_review(repo: Data<AppState>, review_request: Json<SubmitReviewR
         review_request.added_by.to_string(),
         review_request.rating,
         EntityType::Person,
-        "124".to_string()
+        review_request.product_id.to_string()
     );
 
     match repo.review_repo.create_review(&new_review).await {

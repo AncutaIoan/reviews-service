@@ -65,7 +65,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "23b8ddc6f6a8b19c4016aaa13519968da9969bc3bc1c1c883cdb0f25dd6c8cf7"
 dependencies = [
  "actix-service",
- "actix-session 0.10.1",
+ "actix-session",
  "actix-utils",
  "actix-web",
  "derive_more 1.0.0",
@@ -135,23 +135,6 @@ dependencies = [
  "futures-core",
  "paste",
  "pin-project-lite",
-]
-
-[[package]]
-name = "actix-session"
-version = "0.7.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43da8b818ae1f11049a4d218975345fe8e56ce5a5f92c11f972abcff5ff80e87"
-dependencies = [
- "actix-service",
- "actix-utils",
- "actix-web",
- "anyhow",
- "async-trait",
- "derive_more 0.99.19",
- "serde",
- "serde_json",
- "tracing",
 ]
 
 [[package]]
@@ -1819,7 +1802,6 @@ name = "reviews-service"
 version = "0.1.0"
 dependencies = [
  "actix-identity",
- "actix-session 0.7.2",
  "actix-web",
  "async-trait",
  "bcrypt",

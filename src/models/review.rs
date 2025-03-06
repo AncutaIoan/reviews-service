@@ -54,7 +54,7 @@ impl Review {
             entity_id,
         }
     }
-    fn validate(&self) -> bool {
+    pub(crate) fn validate(&self) -> bool {
         if self.entity_id.is_empty()
             || self.added_by.is_empty()
             || self.rating > 5

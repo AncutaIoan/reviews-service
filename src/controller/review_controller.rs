@@ -53,6 +53,10 @@ pub async fn add_review(repo: Data<AppState>, review_request: Json<SubmitReviewR
         review_request.product_id.to_string()
     );
 
+    if !new_review.validate() {
+        return Err(ReviewError::BadReview);
+    }
+
     match repo.review_repo.create_review(&new_review).await {
         Ok(inserted_review) => Ok(Json(inserted_review)),
         Err(_) => Err(FailedToCreate)

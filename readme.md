@@ -7,3 +7,14 @@ This project was inspired by my goal of learning Rust, and as a backend develope
 * Utilized async trait to create repositories and manage app state
 
 
+Coming soon:
+* Test containers for integration tests
+* Improved logging for errors and enhanced error handling
+
+
+
+
+
+
+
+

@@ -1,7 +1,7 @@
 use testcontainers::{clients, images::postgres::Postgres};
 use sqlx::{PgPool, Pool, Postgres};
 use std::env;
-
+//TODO please check why I cant use images for the containers?
 pub struct TestDb {
     pub pool: PgPool,
     _container: testcontainers::Container<'static, Postgres>,

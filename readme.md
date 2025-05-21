@@ -8,7 +8,7 @@ This project was inspired by my goal of learning Rust, and as a backend develope
 
 
 Coming soon:
-* Test containers for integration tests
+* Test containers for integration tests (TBI, adding docker support)
 * Improved logging for errors and enhanced error handling
 
 
